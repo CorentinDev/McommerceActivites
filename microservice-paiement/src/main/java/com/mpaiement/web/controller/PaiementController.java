@@ -58,5 +58,18 @@ public class PaiementController {
 
 
 
+    @GetMapping(value = "/paiement/{idCommande}")
+    public Paiement getPaiementByIdCommande(@PathVariable int idCommande) {
+
+        Paiement paiement = paiementDao.findByidCommande(idCommande);
+
+        if(paiement == null)
+            throw new PaiementExistantException("Le paiement pour l'id " + idCommande + " est INTROUVABLE...");
+
+        return paiement;
+    }
+
+
+
 
 }

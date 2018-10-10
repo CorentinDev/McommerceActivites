@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface ExpeditionDao extends JpaRepository<Expedition, Integer> {
 
-    Expedition findById(int id);
+    Expedition findByIdCommande(int id);
 
     List<Expedition> findAll();
 

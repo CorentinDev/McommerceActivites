@@ -1,9 +1,12 @@
 package com.clientui.controller;
 
 import com.clientui.beans.CommandeBean;
+import com.clientui.beans.ExpeditionBean;
 import com.clientui.beans.PaiementBean;
 import com.clientui.beans.ProductBean;
+import com.clientui.enumeration.EtatEnum;
 import com.clientui.proxies.MicroserviceCommandeProxy;
+import com.clientui.proxies.MicroserviceExpeditionProxy;
 import com.clientui.proxies.MicroservicePaiementProxy;
 import com.clientui.proxies.MicroserviceProduitsProxy;
 import org.slf4j.Logger;
@@ -34,6 +37,9 @@ public class ClientController {
     @Autowired
     private MicroservicePaiementProxy paiementProxy;
 
+    @Autowired
+    private MicroserviceExpeditionProxy expeditionProxy;
+
 
     Logger log = LoggerFactory.getLogger(this.getClass());
 
@@ -52,7 +58,6 @@ public class ClientController {
         List<ProductBean> produits =  ProduitsProxy.listeDesProduits();
 
         model.addAttribute("produits", produits);
-
 
         return "Accueil";
     }
@@ -116,17 +121,50 @@ public class ClientController {
 
         Boolean paiementAccepte = false;
         //si le code est autre que 201 CREATED, c'est que le paiement n'a pas pu aboutir.
-        if(paiement.getStatusCode() == HttpStatus.CREATED)
-                paiementAccepte = true;
+        if(paiement.getStatusCode() == HttpStatus.CREATED){
+            paiementAccepte = true;
+
+            // Creation de la creation de l'expedition de la commande
+            ExpeditionBean expeditionBean = new ExpeditionBean();
+            expeditionBean.setIdCommande(idCommande);
+            expeditionProxy.ajouterExpedition(expeditionBean);
+
+        }
+
+
+
 
         model.addAttribute("paiementOk", paiementAccepte); // on envoi un Boolean paiementOk à la vue
+        model.addAttribute("idCommande", idCommande);
 
         return "confirmation";
     }
+
+
+
+    @RequestMapping("/suivi/{idCommande}")
+    public String suiviByIdExpedition(@PathVariable int idCommande, Model model){
+
+        log.info("Suivi d'une expedition via son id: " + idCommande);
+
+        ExpeditionBean expedition =  expeditionProxy.etatExpedition(idCommande);
+
+        expedition.setEtatLibelle(EtatEnum.getById(expedition.getEtat()).getLibelle());
+
+        model.addAttribute("expedition", expedition);
+
+        return "SuiviExpedition";
+    }
+
+
+
 
     //Génére une serie de 16 chiffres au hasard pour simuler vaguement une CB
     private Long numcarte() {
 
         return ThreadLocalRandom.current().nextLong(1000000000000000L,9000000000000000L );
     }
+
+
+
 }
